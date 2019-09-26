@@ -19,7 +19,7 @@ my $tid = $dt->hms;
 
 
 
-############################ Setting Date / Time ############################
+############################ Database SUB ############################
 sub UpdateDB {
 	my $dsn = "dbi:SQLite:dbname=/home/klh/Documents/Projects/pi_speedtest/pi_speedtest.sqlite";
 	my $dbh = DBI->connect($dsn, , , {AutoCommit => 1}) or die "Cannot connect to DB";
@@ -29,23 +29,58 @@ sub UpdateDB {
 	$dbh->disconnect;
 }
 
+############################ GPIO LED SUB ############################
+sub GPIOLeds {
+	print "Setting GPIO LED $_[0] TO: $_[1]\n";
+}
+
 
 
 ############################ Speedtesting ############################
-my $speedtest = `/usr/bin/speedtest-cli --share`;
+open(SPEEDTEST_CLI, "/usr/bin/speedtest-cli --share|");
 
-if ($speedtest =~ s/error//) { 
-	UpdateDB($dato, $tid, "null", "null", "null", "null", "Failed");
-	exit;
+GPIOLeds("IDLE","OFF");
+GPIOLeds("TESTING","ON");
+
+while (<SPEEDTEST_CLI>) {
+	#print;
+
+	if ($_ =~ s/error//) { 
+		UpdateDB($dato, $tid, "null", "null", "null", "null", "Failed");
+		exit;
+	}
+
+	if ($_ =~ s/:\s(\d+\.\d+\sms)//) {
+		$ping = $1; 
+		GPIOLeds("DOWNLOADING","ON");
+	}
+
+	if ($_ =~ s/Download:\s(.*)\n//) {
+		$download = $1;
+		GPIOLeds("DOWNLOADING","OFF");
+		GPIOLeds("UPLOADING","ON");
+	}
+
+	if ($_ =~ s/Upload:\s(.*)\n//) {
+		$upload = $1;
+		GPIOLeds("UPLOADING","OFF");
+		GPIOLeds("TESTING","OFF");
+
+	}
+
+	if ($_ =~ s/result\/(\d+)\.png//) {
+		$share = $1;
+	}
+
 }
-
-if ($speedtest =~ s/:\s(\d+\.\d+\sms)//) { $ping = $1; }
-if ($speedtest =~ s/Download:\s(.*)\n//) { $download = $1; }
-if ($speedtest =~ s/Upload:\s(.*)\n//) { $upload = $1; }
-if ($speedtest =~ s/result\/(\d+)\.png//) { $share = $1; }
+close(SPEEDTEST_CLI);
 
 
 
 ############################ Updating Database ############################
 UpdateDB($dato, $tid, $ping, $download, $upload, $share, "OK");
 
+GPIOLeds("DONE","ON");
+sleep 5;
+GPIOLeds("DONE","OFF");
+GPIOLeds("IDLE","ON");
