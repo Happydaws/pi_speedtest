@@ -21,7 +21,7 @@ my $tid = $dt->hms;
 
 ############################ Database SUB ############################
 sub UpdateDB {
-	my $dsn = "dbi:SQLite:dbname=/home/klh/Documents/Projects/pi_speedtest/pi_speedtest.sqlite";
+	my $dsn = "dbi:SQLite:dbname=pi_speedtest.sqlite";
 	my $dbh = DBI->connect($dsn, , , {AutoCommit => 1}) or die "Cannot connect to DB";
 	my $sth = $dbh->prepare("INSERT INTO speedtest VALUES (?, ?, ?, ?, ?, ?, ?)");
 
