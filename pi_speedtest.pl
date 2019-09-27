@@ -5,27 +5,22 @@
 ############################ Setting Variables ############################
 use strict;
 use warnings;
-use DateTime;
 use DBI;
 my ($ping, $download, $upload, $share);
 
 
 
 ############################ Setting Date / Time ############################
-my $dt = DateTime->now;
-$dt->set_time_zone( 'Europe/Copenhagen' );
-my $dato = $dt->dmy;
-my $tid = $dt->hms;
-
+my $epoch = time;
 
 
 ############################ Database SUB ############################
 sub UpdateDB {
 	my $dsn = "dbi:SQLite:dbname=pi_speedtest.sqlite";
 	my $dbh = DBI->connect($dsn, , , {AutoCommit => 1}) or die "Cannot connect to DB";
-	my $sth = $dbh->prepare("INSERT INTO speedtest VALUES (?, ?, ?, ?, ?, ?, ?)");
+	my $sth = $dbh->prepare("INSERT INTO speedtest VALUES (?, ?, ?, ?, ?, ?)");
 
-	$sth->execute($_[0], $_[1], $_[2], $_[3], $_[4], $_[5], $_[6]);
+	$sth->execute($_[0], $_[1], $_[2], $_[3], $_[4], $_[5]);
 	$dbh->disconnect;
 }
 
@@ -46,7 +41,7 @@ while (<SPEEDTEST_CLI>) {
 	#print;
 
 	if ($_ =~ s/error//) { 
-		UpdateDB($dato, $tid, "null", "null", "null", "null", "Failed");
+		UpdateDB($epoch, "null", "null", "null", "null", "Failed");
 		exit;
 	}
 
@@ -78,7 +73,7 @@ close(SPEEDTEST_CLI);
 
 
 ############################ Updating Database ############################
-UpdateDB($dato, $tid, $ping, $download, $upload, $share, "OK");
+UpdateDB($epoch, $ping, $download, $upload, $share, "OK");
 
 GPIOLeds("DONE","ON");
 sleep 5;
