@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 
-
-
 ############################ Setting Variables ############################
 use strict;
 use warnings;
 use DBI;
+use RPi::Pin;
+use RPi::Const qw(:all);
+
 my ($ping, $download, $upload, $share);
 
 
@@ -26,7 +27,9 @@ sub UpdateDB {
 
 ############################ GPIO LED SUB ############################
 sub GPIOLeds {
-	print "Setting GPIO LED $_[0] TO: $_[1]\n";
+	my $pin = RPi::Pin->new($_[0]);
+	$pin->mode(OUTPUT);
+	$pin->write($_[1]);
 }
 
 
@@ -34,8 +37,8 @@ sub GPIOLeds {
 ############################ Speedtesting ############################
 open(SPEEDTEST_CLI, "/usr/bin/speedtest-cli --share|");
 
-GPIOLeds("IDLE","OFF");
-GPIOLeds("TESTING","ON");
+GPIOLeds("6","0"); ### SET Idle OFF
+GPIOLeds("21","1"); ### SET Testing ON
 
 while (<SPEEDTEST_CLI>) {
 	#print;
@@ -47,19 +50,19 @@ while (<SPEEDTEST_CLI>) {
 
 	if ($_ =~ s/:\s(\d+\.\d+\sms)//) {
 		$ping = $1; 
-		GPIOLeds("DOWNLOADING","ON");
+		GPIOLeds("20","1"); ### SET Download ON
 	}
 
 	if ($_ =~ s/Download:\s(.*)\n//) {
 		$download = $1;
-		GPIOLeds("DOWNLOADING","OFF");
-		GPIOLeds("UPLOADING","ON");
+		GPIOLeds("20","0"); ### SET Download OFF
+		GPIOLeds("13","1"); ### SET Upload ON
 	}
 
 	if ($_ =~ s/Upload:\s(.*)\n//) {
 		$upload = $1;
-		GPIOLeds("UPLOADING","OFF");
-		GPIOLeds("TESTING","OFF");
+		GPIOLeds("13","0"); ### SET Upload OFF
+		GPIOLeds("21","0"); ### SET Testing OFF
 
 	}
 
@@ -75,7 +78,7 @@ close(SPEEDTEST_CLI);
 ############################ Updating Database ############################
 UpdateDB($epoch, $ping, $download, $upload, $share, "OK");
 
-GPIOLeds("DONE","ON");
+GPIOLeds("19","1"); ### SET Done ON
 sleep 5;
-GPIOLeds("DONE","OFF");
-GPIOLeds("IDLE","ON");
+GPIOLeds("19","0"); ### SET Done OFF
+GPIOLeds("6","1"); ### SET IDLE ON
