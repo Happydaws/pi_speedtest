@@ -46,7 +46,7 @@ I found a tiny plastic casing, which i regretted over and over when putting it t
 
 I drew up a facing in [Google Drawings](https://docs.google.com/drawings/), still only using free tools. Printed the facing and glued it to the box.
 
-The script powers in the "IDLE" LED when the tester is idle, turns on "Testing" when the speedtest starts, switches on "Download"/"Upload" LEDS when that part of the test is being done and finally lights up the "DONE" LED a few seconds before switching back to "IDLE"
+The script powers on the "IDLE" LED when the tester is idle, turns on "Testing" when the speedtest starts, switches on "Download"/"Upload" LEDS when that part of the test is being done and finally lights up the "DONE" LED a few seconds before switching back to "IDLE"
 
 The final physical project looks like this:
 
